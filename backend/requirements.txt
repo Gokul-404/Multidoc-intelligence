@@ -3,6 +3,13 @@ uvicorn[standard]>=0.30.0
 pydantic>=2.7.0
 pydantic-settings>=2.2.0
 
+# Groq AI
+langchain-groq>=1.1.0
+groq>=0.37.0
+
+# Local Embeddings (free, no API key needed)
+fastembed>=0.8.0
+
 # Google AI
 langchain-google-genai>=1.0.8
 google-generativeai>=0.7.2

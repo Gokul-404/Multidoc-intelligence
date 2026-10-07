@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 from functools import lru_cache
 from typing import Any, Optional, Type, TypeVar
 
@@ -13,6 +14,11 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import AIMessage
 from pydantic import BaseModel
+
+try:
+    from langchain_groq import ChatGroq
+except ImportError:
+    ChatGroq = None  # type: ignore[assignment, misc]
 
 from app.config import get_settings
 
@@ -22,22 +28,35 @@ T = TypeVar("T", bound=BaseModel)
 
 class ModelService:
     """
-    Centralised model abstraction using LangChain's ChatGoogleGenerativeAI.
+    Centralised model abstraction supporting Groq (Llama 3.3 / Llama 3.1) and Gemini.
     Provides both raw generation and structured output via with_structured_output.
     """
 
     def __init__(self, model_name: Optional[str] = None, temperature: Optional[float] = None) -> None:
         settings = get_settings()
-        self._model_name = model_name or settings.gemini_model
         self._temperature = temperature if temperature is not None else settings.temperature
-        self._llm = ChatGoogleGenerativeAI(
-            model=self._model_name,
-            google_api_key=settings.google_api_key,
-            temperature=self._temperature,
-            max_output_tokens=settings.max_answer_tokens,
-            convert_system_message_to_human=False,
-        )
-        logger.info("ModelService initialised with model=%s temp=%.1f", self._model_name, self._temperature)
+
+        if settings.llm_provider == "groq" and ChatGroq is not None:
+            self._model_name = model_name or settings.groq_model
+            api_key = settings.groq_api_key or os.getenv("GROQ_API_KEY") or "gsk_placeholder_for_startup"
+            self._llm = ChatGroq(
+                model_name=self._model_name,
+                groq_api_key=api_key,
+                temperature=self._temperature,
+                max_tokens=settings.max_answer_tokens,
+            )
+            logger.info("ModelService initialised with Groq model=%s temp=%.1f", self._model_name, self._temperature)
+        else:
+            self._model_name = model_name or settings.gemini_model
+            api_key = settings.google_api_key or os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY") or "placeholder-key"
+            self._llm = ChatGoogleGenerativeAI(
+                model=self._model_name,
+                google_api_key=api_key,
+                temperature=self._temperature,
+                max_output_tokens=settings.max_answer_tokens,
+                convert_system_message_to_human=False,
+            )
+            logger.info("ModelService initialised with Gemini model=%s temp=%.1f", self._model_name, self._temperature)
 
     @property
     def llm(self) -> BaseChatModel:

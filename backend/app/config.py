@@ -25,11 +25,19 @@ class Settings(BaseSettings):
     secret_key: str = Field(default="change-me-in-production-32-chars!!")
     allowed_origins: list[str] = ["http://localhost:3000", "http://localhost:5173"]
 
+    # ── LLM & Embedding Providers ─────────────────────────────────────────────
+    llm_provider: Literal["groq", "gemini"] = "groq"
+    embedding_provider: Literal["fastembed", "gemini"] = "fastembed"
+
+    # ── Groq API ─────────────────────────────────────────────────────────────
+    groq_api_key: str = Field(default="")
+    groq_model: str = "llama-3.3-70b-versatile"
+
     # ── Google Gemini ─────────────────────────────────────────────────────────
     google_api_key: str = Field(default="")
     gemini_model: str = "gemini-2.0-flash"
     gemini_embedding_model: str = "models/text-embedding-004"
-    embedding_dimensions: int = 768
+    embedding_dimensions: int = 384  # 384 for bge-small-en-v1.5, 768 for gemini
 
     # ── Qdrant ───────────────────────────────────────────────────────────────
     qdrant_host: str = "localhost"

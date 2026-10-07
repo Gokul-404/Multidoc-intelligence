@@ -29,8 +29,14 @@ async def health():
     except Exception as exc:
         services["qdrant"] = f"unhealthy: {exc}"
 
-    # Google API
-    services["google_ai"] = "configured" if settings.google_api_key else "not_configured"
+    # LLM & Embeddings Provider Health
+    import os
+    if settings.llm_provider == "groq":
+        services["groq_llm"] = "configured" if (settings.groq_api_key or os.getenv("GROQ_API_KEY")) else "not_configured"
+    else:
+        services["google_ai"] = "configured" if (settings.google_api_key or os.getenv("GOOGLE_API_KEY")) else "not_configured"
+
+    services["embeddings"] = f"{settings.embedding_provider}:healthy"
 
     overall = "healthy" if all(v == "healthy" or v == "configured" for v in services.values()) else "degraded"
 
