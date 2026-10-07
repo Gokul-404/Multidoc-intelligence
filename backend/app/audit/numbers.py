@@ -122,7 +122,7 @@ _NUMBER_CLAIM_RE = re.compile(
     (?:trillion|billion|million|thousand|crore|lakh|[tTbBmMkK](?!\w))?
     \s*%?
     """,
-    re.VERBOSE,
+    re.VERBOSE | re.IGNORECASE,
 )
 
 

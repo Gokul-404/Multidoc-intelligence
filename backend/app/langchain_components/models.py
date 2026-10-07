@@ -37,7 +37,11 @@ class ModelService:
         self._temperature = temperature if temperature is not None else settings.temperature
 
         if settings.llm_provider == "groq" and ChatGroq is not None:
-            self._model_name = model_name or settings.groq_model
+            chosen_model = model_name or settings.groq_model
+            # Groq model alias fallback for available account models
+            if "llama-3.3" in chosen_model or "llama-3.1" in chosen_model:
+                chosen_model = "openai/gpt-oss-120b"
+            self._model_name = chosen_model
             api_key = settings.groq_api_key or os.getenv("GROQ_API_KEY") or "gsk_placeholder_for_startup"
             self._llm = ChatGroq(
                 model_name=self._model_name,

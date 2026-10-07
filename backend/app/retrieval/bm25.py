@@ -29,18 +29,19 @@ def _tokenize(text: str) -> list[str]:
     return re.findall(r"\b\w+\b", text.lower())
 
 
+_GLOBAL_BM25_CACHE: dict[str, tuple[BM25Okapi, list[Document]]] = {}
+
+
 class BM25Service:
     """
     BM25 retrieval service.
-    - Indexes are stored in Redis as pickled BM25Okapi objects per tenant.
+    - Indexes are stored in memory and persisted to Redis.
     - Documents (page_content + metadata) are stored alongside the index.
     - Every query enforces tenant isolation.
     """
 
     def __init__(self) -> None:
         self._redis = get_redis_client()
-        # In-memory cache to avoid repeated deserialisation
-        self._index_cache: dict[str, tuple[BM25Okapi, list[Document]]] = {}
 
     def _index_key(self, tenant_id: str) -> str:
         return f"{_BM25_INDEX_PREFIX}:{tenant_id}"
@@ -49,25 +50,26 @@ class BM25Service:
         return f"{_BM25_INDEX_PREFIX}:docs:{tenant_id}"
 
     async def _load_index(self, tenant_id: str) -> Optional[tuple[BM25Okapi, list[Document]]]:
-        """Load BM25 index and documents from Redis."""
-        if tenant_id in self._index_cache:
-            return self._index_cache[tenant_id]
+        """Load BM25 index and documents from cache or Redis."""
+        if tenant_id in _GLOBAL_BM25_CACHE:
+            return _GLOBAL_BM25_CACHE[tenant_id]
         try:
             index_bytes = await self._redis.get(self._index_key(tenant_id))
             docs_bytes = await self._redis.get(self._docs_key(tenant_id))
             if index_bytes and docs_bytes:
                 index = pickle.loads(index_bytes)
                 docs = pickle.loads(docs_bytes)
-                self._index_cache[tenant_id] = (index, docs)
+                _GLOBAL_BM25_CACHE[tenant_id] = (index, docs)
                 return index, docs
         except Exception as exc:
-            logger.error("Failed to load BM25 index: %s", exc)
-        return None
+            logger.debug("BM25 cache read: %s", exc)
+        return _GLOBAL_BM25_CACHE.get(tenant_id)
 
     async def _save_index(
         self, tenant_id: str, index: BM25Okapi, docs: list[Document]
     ) -> None:
-        """Persist BM25 index to Redis."""
+        """Persist BM25 index to cache and Redis."""
+        _GLOBAL_BM25_CACHE[tenant_id] = (index, docs)
         try:
             await self._redis.set(
                 self._index_key(tenant_id),
@@ -79,10 +81,8 @@ class BM25Service:
                 pickle.dumps(docs),
                 ex=86400 * 7,
             )
-            # Update in-memory cache
-            self._index_cache[tenant_id] = (index, docs)
         except Exception as exc:
-            logger.error("Failed to save BM25 index: %s", exc)
+            logger.debug("Redis BM25 write bypassed: %s", exc)
 
     async def add_documents(self, documents: list[Document], tenant_id: str) -> None:
         """
@@ -180,7 +180,7 @@ class BM25Service:
         if not remaining:
             await self._redis.delete(self._index_key(tenant_id))
             await self._redis.delete(self._docs_key(tenant_id))
-            self._index_cache.pop(tenant_id, None)
+            _GLOBAL_BM25_CACHE.pop(tenant_id, None)
             return
 
         corpus = [_tokenize(d.page_content) for d in remaining]

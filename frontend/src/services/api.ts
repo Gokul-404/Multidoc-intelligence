@@ -42,9 +42,6 @@ export class ApiService {
       if (!res.ok) throw new Error("Failed to load documents");
       const data = await res.json();
       const list = Array.isArray(data) ? data : data.documents || [];
-      if (list.length === 0) {
-        return this.getFallbackDocuments();
-      }
       return list.map((doc: any) => ({
         id: doc.document_id || doc.id || `doc_${Date.now()}`,
         filename: doc.filename || "document.pdf",
@@ -59,7 +56,7 @@ export class ApiService {
         error: doc.error_message,
       }));
     } catch {
-      return this.getFallbackDocuments();
+      return [];
     }
   }
 
@@ -169,7 +166,8 @@ export class ApiService {
       });
 
       if (!res.ok) {
-        throw new Error(`Query failed: ${res.statusText}`);
+        const errData = await res.json().catch(() => ({ detail: res.statusText }));
+        throw new Error(errData.detail || `Query failed: ${res.statusText}`);
       }
 
       const data: QueryResponse = await res.json();
@@ -184,9 +182,9 @@ export class ApiService {
         }
       }
       return data;
-    } catch {
-      // High-fidelity fallback for offline demo / presentation mode
-      return this.generateOfflineDemoResponse(question, documentIds);
+    } catch (err: any) {
+      console.error("Query error:", err);
+      throw err;
     }
   }
 
