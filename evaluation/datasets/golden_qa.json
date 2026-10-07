@@ -1,0 +1,69 @@
+[
+  {
+    "id": "case_fin_01",
+    "domain": "Financial Report",
+    "document_name": "Alphabet_Q3_2024.pdf",
+    "question": "What was Alphabet's consolidated revenues in Q3 2024 and how much did it increase year-over-year?",
+    "ground_truth_answer": "Alphabet reported consolidated revenues of $88.3 billion in Q3 2024, up 15% year-over-year.",
+    "ground_truth_claims": [
+      "Consolidated revenues were $88.3 billion in Q3 2024",
+      "Revenues increased 15% year-over-year"
+    ],
+    "ground_truth_numbers": ["$88.3 billion", "15%"],
+    "relevant_chunk_ids": ["alpha_q3_rev_01"],
+    "is_refusal_expected": false
+  },
+  {
+    "id": "case_legal_02",
+    "domain": "Legal Contract",
+    "document_name": "Master_Services_Agreement_2024.pdf",
+    "question": "What is the limitation of liability cap under section 8.2 of the agreement?",
+    "ground_truth_answer": "Under Section 8.2, each party's aggregate liability is capped at the total fees paid or payable by Customer in the twelve (12) months preceding the claim.",
+    "ground_truth_claims": [
+      "Liability is capped at total fees paid or payable",
+      "Calculated over the 12 months preceding the claim"
+    ],
+    "ground_truth_numbers": ["12"],
+    "relevant_chunk_ids": ["msa_sec_8_liab_01"],
+    "is_refusal_expected": false
+  },
+  {
+    "id": "case_tech_03",
+    "domain": "Technical Documentation",
+    "document_name": "Distributed_Database_Architecture.pdf",
+    "question": "How does the consensus protocol achieve leader election upon node heartbeat timeout?",
+    "ground_truth_answer": "When a node heartbeats timeout reaches 150-300ms, it transitions to candidate state, increments term counter, and requests votes from peers.",
+    "ground_truth_claims": [
+      "Heartbeat timeout occurs between 150-300ms",
+      "Node transitions to candidate state and increments term counter"
+    ],
+    "ground_truth_numbers": ["150-300ms"],
+    "relevant_chunk_ids": ["raft_consensus_sec_3"],
+    "is_refusal_expected": false
+  },
+  {
+    "id": "case_refusal_04",
+    "domain": "Unknown Facts / Out of Domain",
+    "document_name": "Alphabet_Q3_2024.pdf",
+    "question": "What is the secret recipe of Coca-Cola mentioned in the document?",
+    "ground_truth_answer": "The provided document does not contain information about the recipe of Coca-Cola.",
+    "ground_truth_claims": [],
+    "ground_truth_numbers": [],
+    "relevant_chunk_ids": [],
+    "is_refusal_expected": true
+  },
+  {
+    "id": "case_policy_05",
+    "domain": "Corporate Policy",
+    "document_name": "Data_Retention_Policy_v2.pdf",
+    "question": "How long are employee communication logs retained according to the compliance guidelines?",
+    "ground_truth_answer": "Employee communication logs are retained for seven (7) years in encrypted cold storage before permanent erasure.",
+    "ground_truth_claims": [
+      "Communication logs are retained for 7 years",
+      "Logs are stored in encrypted cold storage"
+    ],
+    "ground_truth_numbers": ["7"],
+    "relevant_chunk_ids": ["retention_sec_4_logs"],
+    "is_refusal_expected": false
+  }
+]

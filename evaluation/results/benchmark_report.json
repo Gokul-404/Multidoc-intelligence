@@ -1,0 +1,29 @@
+{
+  "timestamp": "2026-10-07T13:15:44Z",
+  "total_test_cases": 5,
+  "retrieval": {
+    "precision@1": 0.8,
+    "recall@1": 1.0,
+    "mrr@1": 0.8,
+    "ndcg@1": 1.0,
+    "precision@3": 0.2667,
+    "recall@3": 1.0,
+    "mrr@3": 0.8,
+    "ndcg@3": 1.0,
+    "precision@5": 0.16,
+    "recall@5": 1.0,
+    "mrr@5": 0.8,
+    "ndcg@5": 1.0
+  },
+  "generation": {
+    "faithfulness": 1.0,
+    "citation_precision": 1.0,
+    "refusal_accuracy": 1.0,
+    "token_compression_ratio": 0.68
+  },
+  "performance": {
+    "p50_latency_ms": 480.0,
+    "p95_latency_ms": 480.0,
+    "mean_latency_ms": 408.0
+  }
+}
