@@ -1,6 +1,7 @@
 import { DocumentItem, QueryResponse } from "../types";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8000";
+const API_KEY = import.meta.env.VITE_API_KEY || "sentinel-dev-key-change-in-production";
 
 export class ApiService {
   private tenantId: string = "default_tenant";
@@ -16,6 +17,7 @@ export class ApiService {
   private getHeaders(): HeadersInit {
     return {
       "X-Tenant-ID": this.tenantId,
+      "X-API-Key": API_KEY,
     };
   }
 
