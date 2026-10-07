@@ -193,10 +193,10 @@ export const DocumentManager: React.FC<DocumentManagerProps> = ({
                       </p>
                       <div className="flex items-center gap-2 mt-1.5 flex-wrap text-[10px] font-mono text-slate-400">
                         <span className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700/50">
-                          {doc.pages} {doc.pages === 1 ? "page" : "pages"}
+                          {doc.pages ?? 1} {(doc.pages ?? 1) === 1 ? "page" : "pages"}
                         </span>
                         <span className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700/50">
-                          {doc.total_chunks} chunks
+                          {doc.total_chunks ?? 0} chunks
                         </span>
                         {doc.is_scanned && (
                           <span className="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/30">
@@ -204,7 +204,7 @@ export const DocumentManager: React.FC<DocumentManagerProps> = ({
                           </span>
                         )}
                         <span className="text-slate-500">
-                          {doc.file_size_mb.toFixed(1)} MB
+                          {(typeof doc.file_size_mb === "number" ? doc.file_size_mb : 0).toFixed(1)} MB
                         </span>
                       </div>
                     </div>

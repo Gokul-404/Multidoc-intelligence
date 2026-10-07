@@ -22,6 +22,8 @@ from app.models.schemas import (
 )
 from app.security.auth import require_api_key, sanitize_filename
 
+import uuid
+
 router = APIRouter(prefix="/documents", tags=["documents"])
 settings = get_settings()
 logger = logging.getLogger(__name__)
@@ -45,6 +47,7 @@ async def upload_document(
     """
     tenant_id = get_tenant_id(request)
     safe_filename = sanitize_filename(file.filename or "document.pdf")
+    doc_id = str(uuid.uuid4())
 
     # Read file bytes
     file_bytes = await file.read()
@@ -58,6 +61,7 @@ async def upload_document(
                 file_bytes=file_bytes,
                 filename=safe_filename,
                 tenant_id=tenant_id,
+                document_id=doc_id,
             )
         except ValueError as exc:
             logger.warning("Ingestion rejected: %s", exc)
@@ -68,6 +72,7 @@ async def upload_document(
 
     return {
         "message": "Upload accepted. Processing started.",
+        "document_id": doc_id,
         "filename": safe_filename,
         "tenant_id": tenant_id,
     }

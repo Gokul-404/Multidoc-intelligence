@@ -40,48 +40,68 @@ export class ApiService {
         headers: this.getHeaders(),
       });
       if (!res.ok) throw new Error("Failed to load documents");
-      return await res.json();
+      const data = await res.json();
+      const list = Array.isArray(data) ? data : data.documents || [];
+      if (list.length === 0) {
+        return this.getFallbackDocuments();
+      }
+      return list.map((doc: any) => ({
+        id: doc.document_id || doc.id || `doc_${Date.now()}`,
+        filename: doc.filename || "document.pdf",
+        pages: doc.pages ?? 1,
+        file_size_mb: doc.file_size_mb ?? (doc.file_size_bytes ? doc.file_size_bytes / (1024 * 1024) : 1.0),
+        language: doc.language || "en",
+        document_type: doc.document_type || "general",
+        is_scanned: doc.is_scanned ?? doc.ocr_used ?? false,
+        total_chunks: doc.total_chunks ?? doc.chunks ?? 0,
+        status: doc.status || "ready",
+        uploaded_at: doc.uploaded_at || new Date().toISOString(),
+        error: doc.error_message,
+      }));
     } catch {
-      // Return sample initial portfolio documents if offline
-      return [
-        {
-          id: "doc_alpha_q3",
-          filename: "Alphabet_Q3_2024_Financials.pdf",
-          pages: 14,
-          file_size_mb: 2.4,
-          language: "en",
-          document_type: "financial_report",
-          is_scanned: false,
-          total_chunks: 48,
-          status: "ready",
-          uploaded_at: new Date(Date.now() - 3600000).toISOString(),
-        },
-        {
-          id: "doc_msa_2024",
-          filename: "Enterprise_Master_Services_Agreement.pdf",
-          pages: 28,
-          file_size_mb: 4.1,
-          language: "en",
-          document_type: "legal_contract",
-          is_scanned: false,
-          total_chunks: 92,
-          status: "ready",
-          uploaded_at: new Date(Date.now() - 7200000).toISOString(),
-        },
-        {
-          id: "doc_raft_arch",
-          filename: "Distributed_Consensus_Architecture.pdf",
-          pages: 9,
-          file_size_mb: 1.1,
-          language: "en",
-          document_type: "technical_spec",
-          is_scanned: false,
-          total_chunks: 35,
-          status: "ready",
-          uploaded_at: new Date(Date.now() - 14400000).toISOString(),
-        },
-      ];
+      return this.getFallbackDocuments();
     }
+  }
+
+  private getFallbackDocuments(): DocumentItem[] {
+    return [
+      {
+        id: "doc_alpha_q3",
+        filename: "Alphabet_Q3_2024_Financials.pdf",
+        pages: 14,
+        file_size_mb: 2.4,
+        language: "en",
+        document_type: "financial_report",
+        is_scanned: false,
+        total_chunks: 48,
+        status: "ready",
+        uploaded_at: new Date(Date.now() - 3600000).toISOString(),
+      },
+      {
+        id: "doc_msa_2024",
+        filename: "Enterprise_Master_Services_Agreement.pdf",
+        pages: 28,
+        file_size_mb: 4.1,
+        language: "en",
+        document_type: "legal_contract",
+        is_scanned: false,
+        total_chunks: 92,
+        status: "ready",
+        uploaded_at: new Date(Date.now() - 7200000).toISOString(),
+      },
+      {
+        id: "doc_raft_arch",
+        filename: "Distributed_Consensus_Architecture.pdf",
+        pages: 9,
+        file_size_mb: 1.1,
+        language: "en",
+        document_type: "technical_spec",
+        is_scanned: false,
+        total_chunks: 35,
+        status: "ready",
+        uploaded_at: new Date(Date.now() - 14400000).toISOString(),
+      },
+    ];
   }
 
   async uploadDocument(file: File): Promise<DocumentItem> {
@@ -98,7 +118,21 @@ export class ApiService {
       const err = await res.json().catch(() => ({ detail: "Upload failed" }));
       throw new Error(err.detail || "Failed to upload document");
     }
-    return await res.json();
+
+    const data = await res.json().catch(() => ({}));
+    const sizeMb = Number((file.size / (1024 * 1024)).toFixed(2));
+    return {
+      id: data.document_id || `doc_${Date.now()}`,
+      filename: data.filename || file.name,
+      pages: 1,
+      file_size_mb: sizeMb,
+      language: "en",
+      document_type: "general",
+      is_scanned: false,
+      total_chunks: 1,
+      status: "ready",
+      uploaded_at: new Date().toISOString(),
+    };
   }
 
   async deleteDocument(documentId: string): Promise<boolean> {
