@@ -10,31 +10,31 @@ SentinelRAG is a production-grade, evidence-grounded document intelligence platf
 ```mermaid
 flowchart TD
     subgraph Ingestion ["Ingestion & Hierarchical Indexing"]
-        PDF[PDF Upload] --> VAL[PDF Validator & MIME / Magic Byte Check]
-        VAL --> OCR[PyMuPDF / Tesseract OCR Fallback]
-        VAL --> LAYOUT[Layout & Heading Analyzer]
-        LAYOUT --> HCHUNK[Parent-Child Hierarchical Chunker]
-        HCHUNK --> PARENTS[Parent Context Chunks (2000 chars)]
-        HCHUNK --> CHILDREN[Child Retrieval Chunks (400 chars)]
-        CHILDREN --> QDRANT[(Qdrant Vector DB - Cosine)]
-        CHILDREN --> BM25[(BM25 Sparse Inverted Index)]
+        PDF["PDF Upload"] --> VAL["PDF Validator & MIME / Magic Byte Check"]
+        VAL --> OCR["PyMuPDF / Tesseract OCR Fallback"]
+        VAL --> LAYOUT["Layout & Heading Analyzer"]
+        LAYOUT --> HCHUNK["Parent-Child Hierarchical Chunker"]
+        HCHUNK --> PARENTS["Parent Context Chunks (2000 chars)"]
+        HCHUNK --> CHILDREN["Child Retrieval Chunks (400 chars)"]
+        CHILDREN --> QDRANT[("Qdrant Vector DB - Cosine")]
+        CHILDREN --> BM25[("BM25 Sparse Inverted Index")]
     end
 
     subgraph LangGraph ["LangGraph Multi-Agent Pipeline"]
-        QUERY[User Query] --> ANALYZE[Query Analyzer Node]
-        ANALYZE --> REWRITE[Query Rewriter / Sub-Question Decomposer]
-        REWRITE --> HYBRID[Multi-Query Hybrid Retriever]
-        HYBRID --> RRF[Reciprocal Rank Fusion (RRF k=60)]
-        RRF --> RERANK[FlashRank Cross-Encoder Reranker]
-        RERANK --> PARENT_MAP[Parent Context Expansion]
-        PARENT_MAP --> COMPRESS[Contextual Compression Node]
-        COMPRESS --> GENERATE[Grounded Answer Generator]
-        GENERATE --> AUDIT{Evidence Auditor Node}
+        QUERY["User Query"] --> ANALYZE["Query Analyzer Node"]
+        ANALYZE --> REWRITE["Query Rewriter / Sub-Question Decomposer"]
+        REWRITE --> HYBRID["Multi-Query Hybrid Retriever"]
+        HYBRID --> RRF["Reciprocal Rank Fusion (RRF k=60)"]
+        RRF --> RERANK["FlashRank Cross-Encoder Reranker"]
+        RERANK --> PARENT_MAP["Parent Context Expansion"]
+        PARENT_MAP --> COMPRESS["Contextual Compression Node"]
+        COMPRESS --> GENERATE["Grounded Answer Generator"]
+        GENERATE --> AUDIT{"Evidence Auditor Node"}
         
-        AUDIT -- Claim / Citation / Number Mismatch & Retries < 2 --> RETRY[Query Refiner Node]
+        AUDIT -->|"Claim/Citation Mismatch & Retries < 2"| RETRY["Query Refiner Node"]
         RETRY --> HYBRID
-        AUDIT -- Max Retries Exceeded / No Evidence --> REFUSE[Safe Refusal Handler]
-        AUDIT -- Audit Passed --> OUTPUT[Verified Grounded Answer + Citations]
+        AUDIT -->|"Max Retries Exceeded / No Evidence"| REFUSE["Safe Refusal Handler"]
+        AUDIT -->|"Audit Passed"| OUTPUT["Verified Grounded Answer + Citations"]
     end
 ```
 
