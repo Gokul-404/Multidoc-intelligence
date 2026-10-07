@@ -9,10 +9,16 @@ from functools import lru_cache
 from typing import Literal
 
 from pydantic import Field, field_validator
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env"),
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
     # ── App ──────────────────────────────────────────────────────────────────
     app_name: str = "SentinelRAG"
     app_version: str = "1.0.0"
@@ -23,7 +29,14 @@ class Settings(BaseSettings):
     # ── API Security ─────────────────────────────────────────────────────────
     api_key: str = Field(default="sentinel-dev-key-change-in-production")
     secret_key: str = Field(default="change-me-in-production-32-chars!!")
-    allowed_origins: list[str] = ["http://localhost:3000", "http://localhost:5173"]
+    allowed_origins: list[str] = [
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:5173",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+    ]
 
     # ── LLM & Embedding Providers ─────────────────────────────────────────────
     llm_provider: Literal["groq", "gemini"] = "groq"
